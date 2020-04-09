@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical" >
@@ -7,39 +8,57 @@
     <RadioGroup
         android:id="@+id/radioGroup1"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:orientation="horizontal"
+        android:layout_height="64dp"
         android:background="@drawable/group_buton_nomal"
-        android:gravity="center">
-        <RadioButton
-            android:id="@+id/radio0"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:checked="true"
-            android:text="@string/weixin"
-            style="@style/radioStyle"
-            android:drawableTop="@drawable/weicho1"/>
-        <RadioButton
-            android:id="@+id/radio1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/addressList"
-            style="@style/radioStyle"
-            android:drawableTop="@drawable/weicho2"/>
-        <RadioButton
-            android:id="@+id/radio2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/find"
-            style="@style/radioStyle"
-            android:drawableTop="@drawable/weicho3"/>
+        android:orientation="horizontal">
 
-        <RadioButton
-            android:id="@+id/radio3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/set"
-            style="@style/radioStyle"
-            android:drawableTop="@drawable/weicho4"/>
+        <LinearLayout
+            android:layout_width="190dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="190dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/FreeTimeTittle"
+                    android:layout_width="74dp"
+                    android:layout_height="wrap_content"
+                    android:text="FreeTime" />
+
+                <TextView
+                    android:id="@+id/FreeTimeTv"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="00:00:00 s" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="71dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical">
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/CenBtn"
+            android:layout_width="66dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="cen" />
+
+        <Button
+            android:id="@+id/WonderBtn"
+            android:layout_width="71dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="xxx" />
     </RadioGroup>
 </LinearLayout>
