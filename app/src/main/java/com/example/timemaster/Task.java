@@ -1,24 +1,35 @@
 package com.example.timemaster;
 
+import android.os.Vibrator;
+import android.provider.Settings;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.Calendar;
 import java.util.Timer;
 
+import static java.lang.Math.abs;
+
 public class Task{
-    public int start;                            //当前任务是否执行
+    public int start;                                //当前任务是否执行
 
-    private String taskName;                      //当前任务类型
-    private int taskDuration;                   //任务的事时间包长度，毫秒
-    private int taskFinishCountDown;            //当前执行的任务时间包倒计时
-    private int taskRunTime;                    //
-    private int taskFinishNum;                    //完成的任务事件包的个数
-    private int taskDestFinishNum;                //预计要完成的任务包
-    private int accumulateTime;                  //总共完成的时间
-    private int wonderCount;                    //当前任务中的走神次数
-    private int wonderSum;                      //走神的总数
+    public String taskName;                         //当前任务类型
+    public int taskDuration;                        //任务的事时间包长度，毫秒
+    public int taskFinishCountDown;                  //当前执行的任务时间包倒计时
+    public int taskRunTime;                         //
+    public int taskFinishNum;                       //完成的任务事件包的个数
+    public int taskDestFinishNum;                   //预计要完成的任务包
+    public int accumulateTime;                      //总共完成的时间
+    public int wonderCount;                         //当前任务中的走神次数
+    public int wonderSum;                           //走神的总数
 
-    private FreeTime freeTime;                     //未规划的自由支配时间
+    private FreeTime freeTime;                      //未规划的自由支配时间
+
+    public int task_time_info_id = -1;             //当前的taskinfo的id
+    public int task_id  = -1;                             //在task_name中的id
+    public int task_time_id = -1;
+
+    public int last_update_time_info_time = 0;          //上次更新last_update_time_info的时间
 
     public Task(String taskName, int taskDuration, int taskDestFinishNum, FreeTime freeTime) {
         this.taskName = taskName;
@@ -92,20 +103,51 @@ public class Task{
                 freeTime.borrowTime(this.taskDuration);
                 freeTime.updateView();
             }
+
+            //判断id 是否为负数，如果是表明还未创建该条记录
+            if(this.task_time_info_id < 0) {
+                //不存在则创建
+                //插入一個time_info記錄
+                //INSERT INTO task_time_info(date, task_id, consume_time, start, end, info)
+                //VALUES("2020-09-12", $task_id, 0, freeTimeCurrentUsed, 15:03:00, 0, 不詳);
+
+                String start_time =   GlobalVariable.getTimeYYMMDDHHMMSS();;
+
+                this.task_time_info_id = GlobalVariable.DBhelpr.insert_task_time_info(this, start_time, "NULL");
+            }
+
+            GlobalVariable.DBhelpr.update_task_time_info(this.task_time_info_id, ""+this.taskRunTime,
+                    null, "true");
         }
-        else
+        else {
+            //做一个update
+            GlobalVariable.DBhelpr.update_task_time_info(this.task_time_info_id, ""+this.taskRunTime,
+                                                null, "false");
             start = 0;
+        }
     }
 
     public void clickFinish(){
         if(start == 0)
             return;
+
+        //將end更新到task_time_info表上
+        String end_time = GlobalVariable.getTimeYYMMDDHHMMSS();
+        GlobalVariable.DBhelpr.update_task_time_info(this.task_time_info_id, ""+this.taskRunTime,
+                end_time, "false");
+        this.task_time_info_id = -1;
+
+
         start = 0;
         taskFinishNum++;
         int leaveTime = taskDuration - taskRunTime;
-        freeTime.giveTime(leaveTime);
+        freeTime.giveTime(leaveTime);   //将多余时间给freetime
         freeTime.updateView();
         taskRunTime = 0;
+
+        //更新task_time的accumulate_time
+        GlobalVariable.DBhelpr.update_task_time(this.task_time_id, this.taskFinishNum, this.accumulateTime);
+
     }
 
     public void clickCancel(){
@@ -115,6 +157,11 @@ public class Task{
         freeTime.borrowTime(taskRunTime);
         freeTime.updateView();
         taskRunTime = 0;
+
+        if(task_time_info_id >= 0) {
+            GlobalVariable.DBhelpr.delete_task_time_info(task_time_info_id);
+            this.task_time_info_id = -1;
+        }
     }
 
     public String getStartStatusString(){
@@ -130,9 +177,26 @@ public class Task{
 
         taskRunTime = taskRunTime + GlobalVariable.timeDuraTion;
         accumulateTime = accumulateTime + GlobalVariable.timeDuraTion;
+
+        //3秒刷一次task_time_info库
+        int now = GlobalVariable.getTimeSec();
+        if(abs(now - last_update_time_info_time) > 3) {
+            GlobalVariable.DBhelpr.update_task_time_info(this.task_time_info_id,
+                    "" + this.taskRunTime, null, "true");
+            last_update_time_info_time = now;
+        }
+
         if(taskRunTime >= taskDuration){
-            taskRunTime = 0;
+            String end_time = GlobalVariable.getTimeYYMMDDHHMMSS();
+            GlobalVariable.DBhelpr.update_task_time_info(this.task_time_info_id,
+                    "" + this.taskRunTime, end_time, "false");
+            this.task_time_info_id = -1;
+            last_update_time_info_time = now;
+
             taskFinishNum = taskFinishNum + 1;
+            GlobalVariable.DBhelpr.update_task_time(task_id, taskFinishNum, accumulateTime);
+
+            taskRunTime = 0;
             start = 0;
         }
     }
@@ -140,6 +204,36 @@ public class Task{
     public void wonderInc(){
         wonderCount++;
         wonderSum++;
+    }
+
+    public void update(int taskRunTime, int taskFinishNum, int accumulateTime){
+        this.taskRunTime = taskRunTime;
+        this.taskFinishNum = taskFinishNum;
+        this.accumulateTime = accumulateTime;
+    }
+
+    public void reset(){
+
+        //更新task_time_info
+        if(this.task_time_info_id >= 0) {
+            String end_time = GlobalVariable.getTimeYYMMDDHHMMSS();
+            GlobalVariable.DBhelpr.update_task_time_info(task_time_info_id, ""+taskRunTime,
+                                                         end_time,"false");
+        }
+
+        //更新task_time
+        //如果完成大于0.6则已算达成个数
+        if(this.taskRunTime * 0.6 >= taskDuration)
+            taskFinishNum++;
+        GlobalVariable.DBhelpr.update_task_time(this.task_time_id, taskFinishNum, accumulateTime);
+
+        //重设数据
+        this.taskRunTime = 0;
+        this.taskFinishNum = 0;
+        this.accumulateTime = 0;
+        this.start = 0;
+        this.task_time_info_id = -1;
+        this.task_time_id = -1;
     }
 
     public void taskTimeAdd(int amount){

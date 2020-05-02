@@ -28,4 +28,12 @@ public class MessageList {
         return msgList.get(enablePostion);
     }
 
+    public void reset(){
+        for(int i = 0;i < msgList.size(); ++i) {
+            Task task = msgList.get(i);
+            task.reset();
+        }
+        enablePostion = -1;
+    }
+
 }

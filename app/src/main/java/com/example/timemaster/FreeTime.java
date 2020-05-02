@@ -3,17 +3,23 @@ import android.view.View;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.TextView;
+import android.app.Activity;
 
 public class FreeTime {
     public int freeTime;
-    public int freeTimeUsed;    //没有记录的freeTime的使用时间
+    public int freeTimeAllUsed;    //没有记录的freeTime的使用时间
+    public int freeTimeCurrentUsed;     //当前一个中断下使用的Time
     public int duration;
     private TextView freeTimeview;
+    private MainActivity mainActivity;
+    public int start;
+    public int currentTaskInfoRecordId;
 
-    FreeTime(TextView freeTimeview, int freeTime, int freeTimeUsed){
-        this.freeTimeview = freeTimeview;
+    FreeTime(MainActivity mainActivity, int freeTime, int freeTimeAllUsed){
+        this.mainActivity = mainActivity;
         this.freeTime = freeTime;
-        this.freeTimeUsed = freeTimeUsed;
+        this.freeTimeAllUsed = freeTimeAllUsed;
+        this.duration =  15 * 60 *GlobalVariable.timeDuraTion;
     }
 
     public String timeConvertSec(int time){
@@ -24,10 +30,54 @@ public class FreeTime {
         return timeStr;
     }
 
+    public void update(int freeTime, int freeTimeAllUsed){
+        this.freeTime = freeTime;
+        this.freeTimeAllUsed = freeTimeAllUsed;
+        updateView();
+    }
 
     public void updateView(){
+
+        TextView freeTimeTextView = mainActivity.findViewById(R.id.FreeTimeTv);
+        TextView currentUsedTimeTextView = mainActivity.findViewById(R.id.CurrentUsedTime);
+        TextView allUsedTimeTextView = mainActivity.findViewById(R.id.AllUsedTime);
+
         String freeTimeStr = timeConvertSec(freeTime);
-        freeTimeview.setText(freeTimeStr);
+        String currentUsedTimeStr = timeConvertSec(freeTimeCurrentUsed);
+        String allUsedTimeStr = timeConvertSec(freeTimeAllUsed);
+
+
+        freeTimeTextView.setText(freeTimeStr);
+        currentUsedTimeTextView.setText(currentUsedTimeStr);
+        allUsedTimeTextView.setText(allUsedTimeStr);
+
+    }
+
+    public void startInit(){
+        if(start == 1)
+            return;
+
+        start = 1;
+        freeTimeCurrentUsed = 0;
+
+        //插入一個time_info記錄
+        //INSERT INTO task_time_info(date, task_id, consume_time, start, end, info)
+        //VALUES("2020-09-12", $task_id, 0, freeTimeCurrentUsed, 15:03:00, 0, 不詳);
+
+        //查詢剛剛insert的id
+        //SELECT id from task_time_info where date = "2020-09-12" and task_id = task_id and start = 15:03:00
+        //currentTaskInfoRecordId = id;
+    }
+
+    public void stop(){
+        if(start == 0)
+            return;
+
+        //將end更新到task_info表上
+        //UPDATE task_time_info SET end = "15:06:00" WHERE task_time_info.id = currentTaskInfoRecordId
+        //更新task_time的accumulate_time
+        //
+        start = 0;
     }
 
     //
@@ -41,10 +91,20 @@ public class FreeTime {
 
     public void timeInc(){
         this.freeTime += GlobalVariable.timeDuraTion;
+
     }
 
     public void timeDec(){
         this.freeTime -= GlobalVariable.timeDuraTion;
+        this.freeTimeAllUsed += GlobalVariable.timeDuraTion;
+        this.freeTimeCurrentUsed += GlobalVariable.timeDuraTion;
+    }
+
+    public void reset(){
+        this.freeTime = 0;
+        this.freeTimeAllUsed = 0;    //没有记录的freeTime的使用时间
+        this.freeTimeCurrentUsed = 0;     //当前一个中断下使用的Time
+        this.start = 0;
     }
 
 }
