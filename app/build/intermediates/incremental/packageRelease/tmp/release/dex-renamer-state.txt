@@ -1,0 +1,4 @@
+#Sun May 03 14:16:19 CST 2020
+base.0=E\:\\git\\TimeMaster\\app\\build\\intermediates\\dex\\release\\mergeDexRelease\\out\\classes.dex
+path.0=classes.dex
+renamed.0=classes.dex

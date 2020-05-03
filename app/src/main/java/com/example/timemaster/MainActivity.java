@@ -27,6 +27,7 @@ public class MainActivity extends Activity {
 
     private DBOperatorHelper DBhelper;
     private String today;
+    private long last_unix_timestamp;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,7 +35,8 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.weichatlayout);
 
-        today = GlobalVariable.getTimeYYMMDD();
+        //初始化播放音频
+        GlobalVariable.soud_player = SoundPoolUtils.getInstance(this, R.raw.finish);
 
         //初始化任务
         initTaskAndTime();
@@ -50,6 +52,8 @@ public class MainActivity extends Activity {
         Log.i("info:", "enable task index is " + messageList.enablePostion);
 
         //开启update线程计时
+        last_unix_timestamp = GlobalVariable.getUnixStamp();
+        today = GlobalVariable.getTimeYYMMDD();
         UpdateThread updateTime = new UpdateThread();
         updateTime.start();
 
@@ -155,7 +159,7 @@ public class MainActivity extends Activity {
         public void run() {
             while (true) {
                 try {
-                    Thread.sleep(GlobalVariable.timeDuraTion);
+                    Thread.sleep(GlobalVariable.timeDuraTion );
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -165,32 +169,35 @@ public class MainActivity extends Activity {
                         //Log.i("info:", "start to run update thread");
                             //跨日检测
                             String now = GlobalVariable.getTimeYYMMDD();
+                            long unix_time_stamp = GlobalVariable.getUnixStamp();
+                            int delta = (int)(unix_time_stamp - last_unix_timestamp);
+                            last_unix_timestamp = unix_time_stamp;
                             if(today.equals(now) == false){
                                 //如果跨日了，要重新初始化messageList和db
                                 //msg reset
                                 messageList.reset();
                                 //db reset
                                 updateDBAndList();
+
+                                myAdapter.notifyDataSetChanged();
                                 today = now;
                             }
 
                             if (messageList.enablePostion < 0) {
                                 //总时间--
                                 freeTime.startInit();
-                                freeTime.timeDec();
+                                freeTime.timeDec(delta);
                                 freeTime.updateView();
                                 //update 总时间
                             } else {
                                 freeTime.stop();
                                 //启动了某个任务
                                 Task m = messageList.get(messageList.enablePostion);
-                                m.taskTimeInc();
+                                m.taskTimeInc(delta);
                                 if(m.start == 0) {
                                     //该任务结束了
                                     messageList.enablePostion = -1;
-                                    //震动
-                                    Vibrator vibrator = (Vibrator)getSystemService(MainActivity.VIBRATOR_SERVICE);
-                                    vibrator.vibrate(1000);
+
                                 }
                                 myAdapter.notifyDataSetChanged();
                             }

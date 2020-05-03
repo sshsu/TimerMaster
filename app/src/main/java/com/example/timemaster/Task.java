@@ -171,12 +171,12 @@ public class Task{
             return "暂停";
     }
 
-    public void taskTimeInc(){
+    public void taskTimeInc(int delta){
         if(start == 0)
             return;
 
-        taskRunTime = taskRunTime + GlobalVariable.timeDuraTion;
-        accumulateTime = accumulateTime + GlobalVariable.timeDuraTion;
+        taskRunTime = taskRunTime + delta;
+        accumulateTime = accumulateTime + delta;
 
         //3秒刷一次task_time_info库
         int now = GlobalVariable.getTimeSec();
@@ -198,6 +198,8 @@ public class Task{
 
             taskRunTime = 0;
             start = 0;
+            //震动
+            GlobalVariable.soud_player.startVideoAndVibrator();
         }
     }
 

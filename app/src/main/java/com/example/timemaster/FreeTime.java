@@ -15,6 +15,8 @@ public class FreeTime {
     public int start;
     public int currentTaskInfoRecordId;
 
+    public int play_gap;
+
     FreeTime(MainActivity mainActivity, int freeTime, int freeTimeAllUsed){
         this.mainActivity = mainActivity;
         this.freeTime = freeTime;
@@ -31,6 +33,7 @@ public class FreeTime {
     }
 
     public void update(int freeTime, int freeTimeAllUsed){
+        this.freeTimeCurrentUsed = 0;
         this.freeTime = freeTime;
         this.freeTimeAllUsed = freeTimeAllUsed;
         updateView();
@@ -59,6 +62,7 @@ public class FreeTime {
 
         start = 1;
         freeTimeCurrentUsed = 0;
+        play_gap = 0;
 
         //插入一個time_info記錄
         //INSERT INTO task_time_info(date, task_id, consume_time, start, end, info)
@@ -94,10 +98,16 @@ public class FreeTime {
 
     }
 
-    public void timeDec(){
-        this.freeTime -= GlobalVariable.timeDuraTion;
-        this.freeTimeAllUsed += GlobalVariable.timeDuraTion;
-        this.freeTimeCurrentUsed += GlobalVariable.timeDuraTion;
+    public void timeDec(int delta){
+        this.freeTime -= delta;
+        this.freeTimeAllUsed += delta;
+        this.freeTimeCurrentUsed += delta;
+        //freeTime 每使用15min提醒一次
+        this.play_gap += delta;
+        if(play_gap > 15 * 60 * GlobalVariable.timeDuraTion){
+            GlobalVariable.soud_player.startVideoAndVibrator();
+            play_gap = 0;
+        }
     }
 
     public void reset(){
@@ -105,6 +115,7 @@ public class FreeTime {
         this.freeTimeAllUsed = 0;    //没有记录的freeTime的使用时间
         this.freeTimeCurrentUsed = 0;     //当前一个中断下使用的Time
         this.start = 0;
+        this.play_gap = 0;
     }
 
 }

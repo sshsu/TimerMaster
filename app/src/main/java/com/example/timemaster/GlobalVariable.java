@@ -7,6 +7,7 @@ import java.util.Date;
 public class GlobalVariable {
     public static int timeDuraTion = 1000;  //时间增加减少的单位 1000ms
     public static DBOperatorHelper DBhelpr;
+    public static SoundPoolUtils soud_player;
 
     public static String getTimeYYMMDDHHMMSS(){
         String ret_time = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date()).toString();
@@ -20,6 +21,11 @@ public class GlobalVariable {
         int sec = now.get(Calendar.SECOND);
         int ret_time = hour * 60 * 60 + min * 60 + sec;
         return ret_time;
+    }
+
+    public static long getUnixStamp(){
+        long unixTime = System.currentTimeMillis();
+        return unixTime;
     }
 
     public static String getTimeYYMMDD(){
